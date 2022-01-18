@@ -51,27 +51,6 @@ class MultiStageComponentizedBuilderTests: XCTestCase {
 
         XCTAssertFalse(firstPassInstance === secondPassInstance)
     }
-
-    func test_componentForCurrentPass_builderReturnsSameInstance_verifyAssertion() {
-        let component = MockComponent()
-        let sameInstanceBuilder = MockMultiStageComponentizedBuilder {
-            return component
-        }
-        sameInstanceBuilder.finalStageBuildHandler = { component, dynamicDep in
-            XCTAssertEqual(dynamicDep, 92393)
-            return MockSimpleRouter()
-        }
-
-        _ = sameInstanceBuilder.finalStageBuild(withDynamicDependency: 92393)
-
-        expectAssertionFailure {
-            _ = sameInstanceBuilder.finalStageBuild(withDynamicDependency: 92393)
-        }
-
-        expectAssertionFailure {
-            _ = sameInstanceBuilder.componentForCurrentBuildPass
-        }
-    }
 }
 
 private class MockComponent {}

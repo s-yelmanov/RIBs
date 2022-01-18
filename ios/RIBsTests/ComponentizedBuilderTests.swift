@@ -18,23 +18,6 @@
 import XCTest
 
 class ComponentizedBuilderTests: XCTestCase {
-
-    func test_componentForCurrentPass_builderReturnsSameInstance_verifyAssertion() {
-        let component = MockComponent()
-        let sameInstanceBuilder = MockComponentizedBuilder {
-            return component
-        }
-        sameInstanceBuilder.buildHandler = { component, _ in
-            return MockSimpleRouter()
-        }
-
-        let _: MockSimpleRouter = sameInstanceBuilder.build(withDynamicBuildDependency: (), dynamicComponentDependency: ())
-
-        expectAssertionFailure {
-            let _: MockSimpleRouter = sameInstanceBuilder.build(withDynamicBuildDependency: (), dynamicComponentDependency: ())
-        }
-    }
-
     func test_componentForCurrentPass_builderReturnsNewInstance_verifyNoAssertion() {
         let sameInstanceBuilder = MockComponentizedBuilder {
             return MockComponent()
