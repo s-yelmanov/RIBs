@@ -50,11 +50,7 @@ open class Worker: Working {
 
     /// Indicates if the `Worker` is started.
     public final var isStarted: Bool {
-        do {
-            return try isStartedSubject.value
-        } catch {
-            return false
-        }
+        isStartedSubject.value
     }
 
     /// The lifecycle stream of this `Worker`.
