@@ -85,10 +85,8 @@ open class Interactor: Interactable {
     ///
     /// - note: This method is internally invoked by the corresponding router. Application code should never explicitly
     ///   invoke this method.
-    public final func activate() {
-        guard !isActive else {
-            return
-        }
+    public func activate() {
+        guard !isActive else { return }
 
         activenessCancellable = CompositeCancellable()
 
@@ -109,10 +107,8 @@ open class Interactor: Interactable {
     ///
     /// - note: This method is internally invoked by the corresponding router. Application code should never explicitly
     ///   invoke this method.
-    public final func deactivate() {
-        guard isActive else {
-            return
-        }
+    public func deactivate() {
+        guard isActive else { return }
 
         willResignActive()
 
@@ -122,7 +118,7 @@ open class Interactor: Interactable {
         isActiveSubject.send(false)
     }
 
-    /// Callend when the `Interactor` will resign the active state.
+    /// Called when the `Interactor` will resign the active state.
     ///
     /// This method is driven by the detachment of this interactor's owner router. Subclasses should override this
     /// method to cleanup any resources and states of the `Interactor`. The default implementation does nothing.
@@ -143,21 +139,21 @@ open class Interactor: Interactable {
     }
 }
 
-/// Interactor related `Observable` extensions.
+/// Interactor related `AnyPublisher` extensions.
 public extension AnyPublisher {
 
-    /// Confines the observable's subscription to the given interactor scope. The subscription is only triggered
+    /// Confines the publisher's subscription to the given interactor scope. The subscription is only triggered
     /// after the interactor scope is active and before the interactor scope resigns active. This composition
-    /// delays the subscription but does not dispose the subscription, when the interactor scope becomes inactive.
+    /// delays the subscription but does not cancel the subscription, when the interactor scope becomes inactive.
     ///
     /// - note: This method should only be used for subscriptions outside of an `Interactor`, for cases where a
     ///   piece of logic is only executed when the bound interactor scope is active.
     ///
-    /// - note: Only the latest value from this observable is emitted. Values emitted when the interactor is not
+    /// - note: Only the latest value from this publisher is emitted. Values emitted when the interactor is not
     ///   active, are ignored.
     ///
-    /// - parameter interactorScope: The interactor scope whose activeness this observable is confined to.
-    /// - returns: The `Observable` confined to this interactor's activeness lifecycle.
+    /// - parameter interactorScope: The interactor scope whose activeness this publisher is confined to.
+    /// - returns: The `Publisher` confined to this interactor's activeness lifecycle.
 
     func confineTo(_ interactorScope: InteractorScope) -> AnyPublisher<Output, Never> {
         assertNoFailure()
@@ -174,23 +170,23 @@ public extension AnyPublisher {
     }
 }
 
-/// Interactor related `Disposable` extensions.
+/// Interactor related `AnyCancellable` extensions.
 public extension AnyCancellable {
 
-    /// Disposes the subscription based on the lifecycle of the given `Interactor`. The subscription is disposed
-    /// when the interactor is deactivated.
+    /// Cancels the subscription based on the lifecycle of the given `Interactor`. The subscription is
+    /// cancelled when the interactor is deactivated.
     ///
     /// - note: This is the preferred method when trying to confine a subscription to the lifecycle of an
     ///   `Interactor`.
     ///
     /// When using this composition, the subscription closure may freely retain the interactor itself, since the
-    /// subscription closure is disposed once the interactor is deactivated, thus releasing the retain cycle before
-    /// the interactor needs to be deallocated.
+    /// subscription closure is cancelled once the interactor is deactivated, thus releasing the retain cycle
+    /// before the interactor needs to be deallocated.
     ///
     /// If the given interactor is inactive at the time this method is invoked, the subscription is immediately
     /// terminated.
     ///
-    /// - parameter interactor: The interactor to dispose the subscription based on.
+    /// - parameter interactor: The interactor to cancel the subscription based on.
     @discardableResult
     func cancelOnDeactivate(interactor: Interactor) -> AnyCancellable {
         if let activenessCancellable = interactor.activenessCancellable {

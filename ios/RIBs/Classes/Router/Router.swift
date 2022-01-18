@@ -26,8 +26,8 @@ public enum RouterLifecycle {
 /// The scope of a `Router`, defining various lifecycles of a `Router`.
 public protocol RouterScope: AnyObject {
 
-    /// An observable that emits values when the router scope reaches its corresponding life-cycle stages. This
-    /// observable completes when the router scope is deallocated.
+    /// A publisher that emits values when the router scope reaches its corresponding life-cycle stages. This
+    /// publisher completes when the router scope is deallocated.
     var lifecycle: AnyPublisher<RouterLifecycle, Never> { get }
 }
 
@@ -84,9 +84,9 @@ open class Router<InteractorType>: Routing {
     /// The list of children `Router`s of this `Router`.
     public final var children: [Routing] = []
 
-    /// The observable that emits values when the router scope reaches its corresponding life-cycle stages.
+    /// The publisher that emits values when the router scope reaches its corresponding life-cycle stages.
     ///
-    /// This observable completes when the router scope is deallocated.
+    /// This publisher completes when the router scope is deallocated.
     public final var lifecycle: AnyPublisher<RouterLifecycle, Never> {
         return lifecycleSubject.eraseToAnyPublisher()
     }
@@ -166,17 +166,18 @@ open class Router<InteractorType>: Routing {
 
     private func bindSubtreeActiveState() {
 
-        let disposable = interactable.isActiveStream
-            // Do not retain self here to guarantee execution. Retaining self will cause the dispose bag
-            // to never be disposed, thus self is never deallocated. Also cannot just store the disposable
-            // and call dispose(), since we want to keep the subscription alive until deallocation, in
+        let cancellable = interactable.isActiveStream
+            // Do not retain self here to guarantee execution. Retaining self will cause the cancellables
+            // to never be cancelled, thus self is never deallocated. Also cannot just store the cancellable
+            // and call cancel(), since we want to keep the subscription alive until deallocation, in
             // case the router is re-attached. Using weak does require the router to be retained until its
             // interactor is deactivated.
             .sink(receiveValue: { [weak self] (isActive: Bool) in
                 // When interactor becomes active, we are attached to parent, otherwise we are detached.
                 self?.setSubtreeActive(isActive)
             })
-        deinitCancellable.insert(disposable)
+
+        deinitCancellable.insert(cancellable)
     }
 
     private func setSubtreeActive(_ active: Bool) {
@@ -196,7 +197,7 @@ open class Router<InteractorType>: Routing {
         }
     }
 
-    private func iterateSubtree(_ root: Routing, closure: (_ node: Routing) -> ()) {
+    private func iterateSubtree(_ root: Routing, closure: (_ node: Routing) -> Void) {
         closure(root)
 
         for child in root.children {
@@ -214,7 +215,7 @@ open class Router<InteractorType>: Routing {
     deinit {
         interactable.deactivate()
 
-        if !children.isEmpty {
+        if children.isEmpty == false {
             detachAllChildren()
         }
 

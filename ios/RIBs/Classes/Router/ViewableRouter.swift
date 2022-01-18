@@ -33,13 +33,17 @@ public protocol ViewableRouting: Routing {
 /// A `Router` acts on inputs from its corresponding interactor, to manipulate application state and view state,
 /// forming a tree of routers that drives the tree of view controllers. Router drives the lifecycle of its owned
 /// interactor. `Router`s should always use helper builders to instantiate children `Router`s.
-open class ViewableRouter<InteractorType, ViewControllerType>: Router<InteractorType>, ViewableRouting {
+open class ViewableRouter<InteractorType, ViewControllerType>: Router<InteractorType>, BasePresentationRoutine, ViewableRouting {
 
     /// The corresponding `ViewController` owned by this `Router`.
     public let viewController: ViewControllerType
 
     /// The base `ViewControllable` associated with this `Router`.
     public let viewControllable: ViewControllable
+
+    // MARK: - BasePresentationRoutine
+
+    public var viewablePresentation: ViewablePresentation.RawValue?
 
     /// Initializer.
     ///
