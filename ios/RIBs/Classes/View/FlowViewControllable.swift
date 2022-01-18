@@ -14,13 +14,21 @@
 //  limitations under the License.
 //
 
-import Foundation
+import UIKit
 
-/// The base dependency protocol.
-///
-/// Subclasses should define a set of properties that are required by the module from the DI graph. A dependency is
-/// typically provided and satisfied by its immediate parent module.
-public protocol Dependency: AnyObject {}
+public protocol FlowViewControllable: ViewControllable {
+    var uiViewController: UINavigationController { get }
+}
 
-/// The special empty dependency.
-public protocol EmptyDependency: Dependency {}
+/// Default implementation on `UINavigationController` to conform to `FlowViewControllable` protocol
+public extension FlowViewControllable where Self: UINavigationController {
+    var uiViewController: UINavigationController {
+        return self
+    }
+}
+
+extension UINavigationController: FlowViewControllable {
+    public convenience init (root: ViewControllable) {
+        self.init(rootViewController: root.uiViewController)
+    }
+}
