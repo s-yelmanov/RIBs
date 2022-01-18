@@ -17,6 +17,16 @@ The RIBs architecture provides:
 
 
 ## Documentation
+
+#### Fork Updates
+- [x] Replace RxSwift with Combine usage
+- [ ] Base presentation routines
+- [ ] Flow presentation routines
+- [ ] DI with Needle
+- [ ] Unit tests for new functionality
+- [ ] Tutorial application with new functionality
+
+#### Getting started
 To get started with RIBs, please refer to the [RIBs documentation](https://github.com/uber/RIBs/wiki). This describes key concepts on RIBs, from what they are for, their structure and common use cases.
 
 To get more hands on with RIBs, we have written a [series of tutorials](https://github.com/uber/RIBs/wiki) that run you through the main aspects of the architecture with hands-on examples.
