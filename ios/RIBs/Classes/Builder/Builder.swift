@@ -20,15 +20,15 @@ import Foundation
 public protocol Buildable: AnyObject {}
 
 /// Utility that instantiates a RIB and sets up its internal wirings.
-open class Builder<DependencyType>: Buildable {
+open class Builder<ComponentType>: Buildable {
 
-    /// The dependency used for this builder to build the RIB.
-    public let dependency: DependencyType
+    /// The component used for this builder to build the RIB.
+    public let component: ComponentType
 
     /// Initializer.
     ///
-    /// - parameter dependency: The dependency used for this builder to build the RIB.
-    public init(dependency: DependencyType) {
-        self.dependency = dependency
+    /// - parameter component: The component used for this builder to build the RIB.
+    public init(component: ComponentType) {
+        self.component = component
     }
 }
