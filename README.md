@@ -20,8 +20,8 @@ The RIBs architecture provides:
 
 #### Fork Updates
 - [x] Replace RxSwift with Combine usage
-- [ ] Base presentation routines
-- [ ] Flow presentation routines
+- [x] Base presentation routines
+- [x] Flow presentation routines
 - [ ] DI with Needle
 - [ ] Unit tests for new functionality
 - [ ] Tutorial application with new functionality
