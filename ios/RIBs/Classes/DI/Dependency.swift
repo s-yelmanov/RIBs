@@ -16,19 +16,11 @@
 
 import Foundation
 
-/// The base builder protocol that all builders should conform to.
-public protocol Buildable: AnyObject {}
+/// The base dependency protocol.
+///
+/// Subclasses should define a set of properties that are required by the module from the DI graph. A dependency is
+/// typically provided and satisfied by its immediate parent module.
+public protocol Dependency: AnyObject {}
 
-/// Utility that instantiates a RIB and sets up its internal wirings.
-open class Builder<DependencyType>: Buildable {
-
-    /// The dependency used for this builder to build the RIB.
-    public let dependency: DependencyType
-
-    /// Initializer.
-    ///
-    /// - parameter dependency: The dependency used for this builder to build the RIB.
-    public init(dependency: DependencyType) {
-        self.dependency = dependency
-    }
-}
+/// The special empty dependency.
+public protocol EmptyDependency: Dependency {}
