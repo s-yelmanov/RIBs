@@ -22,7 +22,6 @@ The RIBs architecture provides:
 - [x] Replace RxSwift with Combine usage
 - [x] Base presentation routines
 - [x] Flow presentation routines
-- [ ] DI with Needle
 - [ ] Unit tests for new functionality
 - [ ] Tutorial application with new functionality
 
