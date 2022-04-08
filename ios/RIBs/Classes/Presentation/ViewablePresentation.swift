@@ -21,7 +21,7 @@ public enum ViewablePresentation {
     public typealias ViewControllableCompletion = (ViewControllable) -> Void
 
     case asRoot(in: UIWindow, with: UIWindow.Transition?)
-    case modally(on: ViewControllable, fullScreen: Bool, animated: Bool, completion: BaseCompletion?)
+    case modally(on: ViewControllable, presentationStyle: UIModalPresentationStyle = .automatic, animated: Bool, completion: BaseCompletion?)
     case embedded(in: ViewControllable, contentView: UIView, completion: ViewControllableCompletion?)
 
     public func execute(with viewController: ViewControllable) {
@@ -30,10 +30,8 @@ public enum ViewablePresentation {
             window.set(rootViewController: viewController.uiViewController, withTransition: transition)
             window.makeKeyAndVisible()
 
-        case .modally(let baseViewController, let fullScreen, let animated, let completion):
-            if fullScreen {
-                viewController.uiViewController.modalPresentationStyle = .fullScreen
-            }
+        case .modally(let baseViewController, let presentationStyle, let animated, let completion):
+            viewController.uiViewController.modalPresentationStyle = presentationStyle
             baseViewController.uiViewController.present(
                 viewController.uiViewController,
                 animated: animated,
