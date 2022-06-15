@@ -44,3 +44,10 @@
 
 * `BasicComposeRouter` now auto-attaches child composable content
 
+### Version 0.12.2
+
+* Work around Bazel desugar issues
+
+### Version 0.13.0
+
+* [Android] Adds rib-coroutines and rib-coroutines-test to enable corotouines interop
