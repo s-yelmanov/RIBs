@@ -17,7 +17,9 @@
 import UIKit
 
 public extension UINavigationController {
-    func pushViewController(_ viewController: UIViewController, animated: Bool, completion: (() -> Void)?) {
+    typealias BaseCompletion = () -> Void
+
+    func pushViewController(_ viewController: UIViewController, animated: Bool = true, completion: BaseCompletion? = nil) {
         pushViewController(viewController, animated: animated)
         guard animated, let coordinator = transitionCoordinator else {
             DispatchQueue.main.async { completion?() }
@@ -26,7 +28,7 @@ public extension UINavigationController {
         coordinator.animate(alongsideTransition: nil) { _ in completion?() }
     }
 
-    func popViewController(animated: Bool, completion: (() -> Void)?) {
+    func popViewController(animated: Bool, completion: BaseCompletion?) {
         popViewController(animated: animated)
         guard animated, let coordinator = transitionCoordinator else {
             DispatchQueue.main.async { completion?() }
@@ -35,7 +37,7 @@ public extension UINavigationController {
         coordinator.animate(alongsideTransition: nil) { _ in completion?() }
     }
 
-    func popToViewController(_ viewController: UIViewController, animated: Bool, completion: (() -> Void)?) {
+    func popToViewController(_ viewController: UIViewController, animated: Bool = true, completion: BaseCompletion? = nil) {
         popToViewController(viewController, animated: animated)
         guard animated, let coordinator = transitionCoordinator else {
             DispatchQueue.main.async { completion?() }
@@ -44,8 +46,12 @@ public extension UINavigationController {
         coordinator.animate(alongsideTransition: nil) { _ in completion?() }
     }
 
-    func replaceRootViewController(with viewController: UIViewController, animated: Bool, completion: (() -> Void)?) {
-        setViewControllers([viewController], animated: animated)
+    func replaceViewControllers(
+        with viewControllers: [UIViewController],
+        animated: Bool = true,
+        completion: BaseCompletion? = nil
+    ) {
+        setViewControllers(viewControllers, animated: animated)
         guard animated, let coordinator = transitionCoordinator else {
             DispatchQueue.main.async { completion?() }
             return

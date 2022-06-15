@@ -63,6 +63,10 @@ public protocol Routing: RouterScope {
     ///
     /// - parameter child: The child router to detach.
     func detachChild(_ child: Routing)
+
+    /// Detaches the topmost router from the tree.
+    ///
+    func detachCurrentChild()
 }
 
 /// The base class of all routers that does not own view controllers, representing application states.
@@ -148,6 +152,13 @@ open class Router<InteractorType>: Routing {
         child.interactable.deactivate()
 
         children.removeElementByReference(child)
+    }
+
+    /// Detaches the topmost router from the tree.
+    ///
+    public final func detachCurrentChild() {
+        guard let currentChild = children.last else { return }
+        detachChild(currentChild)
     }
 
     // MARK: - Internal

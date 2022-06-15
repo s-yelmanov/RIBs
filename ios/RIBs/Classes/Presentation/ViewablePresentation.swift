@@ -20,23 +20,20 @@ public enum ViewablePresentation {
     public typealias BaseCompletion = () -> Void
     public typealias ViewControllableCompletion = (ViewControllable) -> Void
 
-    case asRoot(in: UIWindow, with: UIWindow.Transition?)
-    case modally(on: ViewControllable, presentationStyle: UIModalPresentationStyle = .automatic, animated: Bool, completion: BaseCompletion?)
-    case embedded(in: ViewControllable, contentView: UIView, completion: ViewControllableCompletion?)
+    case asRoot(in: UIWindow, with: UIWindow.Transition? = nil)
+    case embedded(in: ViewControllable, contentView: UIView, completion: ViewControllableCompletion? = nil)
+    case modally(
+        on: ViewControllable,
+        presentationStyle: UIModalPresentationStyle = .automatic,
+        animated: Bool = true,
+        completion: BaseCompletion? = nil
+    )
 
     public func execute(with viewController: ViewControllable) {
         switch self {
         case .asRoot(let window, let transition):
             window.set(rootViewController: viewController.uiViewController, withTransition: transition)
             window.makeKeyAndVisible()
-
-        case .modally(let baseViewController, let presentationStyle, let animated, let completion):
-            viewController.uiViewController.modalPresentationStyle = presentationStyle
-            baseViewController.uiViewController.present(
-                viewController.uiViewController,
-                animated: animated,
-                completion: completion
-            )
 
         case .embedded(let parent, let contentView, let completion):
             contentView.addSubview(viewController.uiViewController.view)
@@ -51,11 +48,19 @@ public enum ViewablePresentation {
             parent.uiViewController.addChild(viewController.uiViewController)
             viewController.uiViewController.didMove(toParent: parent.uiViewController)
             completion?(viewController)
+
+        case .modally(let baseViewController, let presentationStyle, let animated, let completion):
+            viewController.uiViewController.modalPresentationStyle = presentationStyle
+            baseViewController.uiViewController.present(
+                viewController.uiViewController,
+                animated: animated,
+                completion: completion
+            )
         }
     }
 
     public enum RawValue {
-        case asRoot, modally, embedded
+        case asRoot, embedded, modally
     }
 
     var rawValue: RawValue {

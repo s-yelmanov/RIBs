@@ -58,7 +58,7 @@ open class Workflow<ActionableItemType> {
     ///
     /// - parameter onStep: The closure to execute for the root step.
     /// - returns: The next step.
-    // swiftlint:disable generic_type_name
+    // swiftlint:disable:next generic_type_name
     public final func onStep<NextActionableItemType, NextValueType>(
         _ onStep: @escaping (ActionableItemType) -> StepPublisher<NextActionableItemType, NextValueType>
     ) -> Step<ActionableItemType, NextActionableItemType, NextValueType> {
@@ -67,7 +67,6 @@ open class Workflow<ActionableItemType> {
                 onStep(actionableItem)
             }
     }
-    // swiftlint:enable generic_type_name
 
     /// Subscribe and start the `Workflow` sequence.
     ///
@@ -127,7 +126,7 @@ open class Step<WorkflowActionableItemType, ActionableItemType, ValueType> {
     ///
     /// - parameter onStep: The closure to execute for the `Step`.
     /// - returns: The next step.
-    // swiftlint:disable generic_type_name
+    // swiftlint:disable:next generic_type_name
     public final func onStep<NextActionableItemType, NextValueType>(
         _ onStep: @escaping (ActionableItemType, ValueType) -> StepPublisher<NextActionableItemType, NextValueType>
     ) -> Step<WorkflowActionableItemType, NextActionableItemType, NextValueType> {
@@ -154,11 +153,10 @@ open class Step<WorkflowActionableItemType, ActionableItemType, ValueType> {
                 isActive
             }
             .prefix(1)
-            // swiftlint:disable line_length
+            // swiftlint:disable:next line_length
             .map { (_, actionableItem: ActionableItemType, value: ValueType) -> StepPublisher<NextActionableItemType, NextValueType> in
                 onStep(actionableItem, value)
             }
-            // swiftlint:enable line_length
             .switchToLatest()
             .prefix(1)
             .share()
@@ -169,7 +167,6 @@ open class Step<WorkflowActionableItemType, ActionableItemType, ValueType> {
             publisher: confinedNextStep
         )
     }
-    // swiftlint:enable generic_type_name
 
     /// Executes the given closure when the `Step` produces an error.
     ///
@@ -227,7 +224,7 @@ public extension Publisher {
     /// - parameter workflow: The workflow this step belongs to.
     /// - returns: The newly forked step in the workflow. `nil` if this observable does not conform to the required
     ///   generic type of (ActionableItemType, ValueType).
-    // swiftlint:disable generic_type_name
+    // swiftlint:disable:next generic_type_name
     func fork<WorkflowActionableItemType, ActionableItemType, ValueType>(
         _ workflow: Workflow<WorkflowActionableItemType>
     ) -> Step<WorkflowActionableItemType, ActionableItemType, ValueType>? {
@@ -237,7 +234,6 @@ public extension Publisher {
         }
         return nil
     }
-    // swiftlint:enable generic_type_name
 }
 
 /// `Workflow` related `Disposable` extensions.

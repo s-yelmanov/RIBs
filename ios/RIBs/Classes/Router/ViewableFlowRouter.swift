@@ -30,11 +30,10 @@ public protocol ViewableFlowRouting: Routing {
     func routeToInitialComponent()
 }
 
-// swiftlint:disable generic_type_name
+// swiftlint:disable:next generic_type_name
 open class ViewableFlowRouter<FlowInteractorType, FlowViewControllerType>: Router<FlowInteractorType>,
                                                                            ViewableFlowRouting,
                                                                            FlowPresentationRoutine {
-// swiftlint:enable generic_type_name
 
     public var viewControllable: ViewControllable { navigationViewControllable }
 
@@ -92,11 +91,15 @@ open class ViewableFlowRouter<FlowInteractorType, FlowViewControllerType>: Route
     }
 
     public func replaceRoot(with viewController: ViewControllable, transition: FlowTransition, completion: BaseCompletion?) {
+        replaceRoot(with: [viewController], transition: transition, completion: completion)
+    }
+
+    public func replaceRoot(with viewControllers: [ViewControllable], transition: FlowTransition, completion: BaseCompletion?) {
         navigationControllerDelegateProxy.startPresentation()
 
         flowTransition = transition
-        navigationViewControllable.uiViewController.replaceRootViewController(
-            with: viewController.uiViewController,
+        navigationViewControllable.uiViewController.replaceViewControllers(
+            with: viewControllers.map(\.uiViewController),
             animated: flowTransition.animated,
             completion: completion
         )
