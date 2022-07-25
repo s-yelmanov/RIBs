@@ -90,6 +90,10 @@ open class ViewableFlowRouter<FlowInteractorType, FlowViewControllerType>: Route
         )
     }
 
+    public func pop(animated: Bool, completion: BaseCompletion?) {
+        navigationViewControllable.uiViewController.popViewController(animated: animated, completion: completion)
+    }
+
     public func replaceRoot(with viewController: ViewControllable, transition: FlowTransition, completion: BaseCompletion?) {
         replaceRoot(with: [viewController], transition: transition, completion: completion)
     }
@@ -139,5 +143,9 @@ open class ViewableFlowRouter<FlowInteractorType, FlowViewControllerType>: Route
     /// This method is called from NavigationControllerDelegateProxyMethodsHandler to perform resources cleanup
     open func didDetachChild(child: ViewableRouting) {
         fatalError("This method should be overridden by the subclass.")
+    }
+
+    open func didDetachSubflow(subflow: ViewableSubflowRouting) {
+        // No-op
     }
 }

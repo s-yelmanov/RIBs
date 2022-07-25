@@ -112,6 +112,18 @@ extension ViewableFlowRouter: NavigationControllerDelegateProxyMethodsHandler {
         animated: Bool
     ) {
         children
+            .compactMap { $0 as? ViewableSubflowRouting }
+            .map { subflow -> ViewableSubflowRouting in
+                subflow.ensureChildrenConsistency()
+                return subflow
+            }
+            .forEach { subflow in
+                guard subflow.children.isEmpty else { return }
+                self.detachChild(subflow)
+                self.didDetachSubflow(subflow: subflow)
+            }
+
+        children
             .compactMap { $0 as? ViewableRouting }
             .filter { child in
                 navigationController.viewControllers.contains(child.viewControllable.uiViewController) == false

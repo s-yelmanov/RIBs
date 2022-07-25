@@ -24,4 +24,17 @@ public protocol FlowPresentationRoutine: BasePresentationRoutine {
 
     func push(viewController: ViewControllable, transition: FlowTransition, completion: BaseCompletion?)
     func pop(animated: Bool, completion: BaseCompletion?)
+
+    func pushAttached(router: ViewableRouting, transition: FlowTransition, completion: BaseCompletion?)
+    func popDetached(animated: Bool, completion: BaseCompletion?)
+}
+
+extension FlowPresentationRoutine {
+    func pushAttached(router: ViewableRouting, transition: FlowTransition = .default, completion: BaseCompletion? = nil) {
+        pushAttached(router: router, transition: transition, completion: completion)
+    }
+
+    func popDetached(animated: Bool = true, completion: BaseCompletion? = nil) {
+        popDetached(animated: animated, completion: completion)
+    }
 }

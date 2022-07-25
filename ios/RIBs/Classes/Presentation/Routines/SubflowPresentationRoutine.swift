@@ -1,34 +1,15 @@
 //
-//  Copyright (c) 2017. Uber Technologies
+//  SubflowPresentationRoutine.swift
+//  
 //
-//  Licensed under the Apache License, Version 2.0 (the "License");
-//  you may not use this file except in compliance with the License.
-//  You may obtain a copy of the License at
-//
-//  http://www.apache.org/licenses/LICENSE-2.0
-//
-//  Unless required by applicable law or agreed to in writing, software
-//  distributed under the License is distributed on an "AS IS" BASIS,
-//  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-//  See the License for the specific language governing permissions and
-//  limitations under the License.
+//  Created by Vladyslav Skintiian on 7/25/22.
 //
 
 import Foundation
 
-public extension FlowPresentationRoutine where Self: Routing {
-    func pushAttached(router: ViewableRouting, transition: FlowTransition = .default, completion: BaseCompletion? = nil) {
-        attachChild(router)
-        push(viewController: router.viewControllable, transition: transition, completion: completion)
-    }
+public protocol SubflowPresentationRoutine: FlowPresentationRoutine { }
 
-    func popDetached(animated: Bool = true, completion: BaseCompletion? = nil) {
-        detachCurrentChild()
-        pop(animated: animated, completion: completion)
-    }
-}
-
-public extension FlowPresentationRoutine where Self: ViewableFlowRouting {
+public extension SubflowPresentationRoutine where Self: ViewableSubflowRouting {
     func popToRoot(animated: Bool = true, completion: BaseCompletion? = nil) {
         var childViewableRouters = childViewableRouters
         guard !childViewableRouters.isEmpty else { return }
@@ -43,6 +24,8 @@ public extension FlowPresentationRoutine where Self: ViewableFlowRouting {
             animated: animated,
             completion: completion
         )
+
+        ensureViewStackConsistency()
     }
 
     func pop(with identifier: String, animated: Bool = true, completion: BaseCompletion? = nil) {
@@ -80,6 +63,8 @@ public extension FlowPresentationRoutine where Self: ViewableFlowRouting {
             animated: animated,
             completion: completion
         )
+
+        ensureViewStackConsistency()
     }
 
     func pop(to identifier: String, animated: Bool = true, completion: BaseCompletion? = nil) {
@@ -104,6 +89,8 @@ public extension FlowPresentationRoutine where Self: ViewableFlowRouting {
             animated: animated,
             completion: completion
         )
+
+        ensureViewStackConsistency()
     }
 
     private var childViewableRouters: [ViewableRouting] {
