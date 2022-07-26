@@ -23,39 +23,36 @@ public protocol ViewableSubflowRouting: Routing {
     func ensureViewStackConsistency()
 }
 
-// swiftlint:disable:next generic_type_name
+public typealias ViewableSubflowParentRouting = ViewableFlowRouting & FlowPresentationRoutine
 open class ViewableSubflowRouter<InteractorType>: Router<InteractorType>,
                                                   ViewableSubflowRouting,
                                                   SubflowPresentationRoutine {
     public var viewablePresentation: ViewablePresentation.RawValue?
     public var viewControllable: ViewControllable { navigationViewControllable }
 
-    public let baseFlowRouter: ViewableFlowRouting & FlowPresentationRoutine
+    public let parent: ViewableSubflowParentRouting
 
     private var viewControllers: [UIViewController] = []
 
     // MARK: - FlowPresentationRoutine
 
-    public var navigationViewControllable: FlowViewControllable { baseFlowRouter.navigationViewControllable }
+    public var navigationViewControllable: FlowViewControllable { parent.navigationViewControllable }
     public var flowTransition: FlowTransition {
-        get { baseFlowRouter.flowTransition }
-        set { baseFlowRouter.flowTransition = newValue }
+        get { parent.flowTransition }
+        set { parent.flowTransition = newValue }
     }
 
     public func push(viewController: ViewControllable, transition: FlowTransition, completion: FlowPresentationRoutine.BaseCompletion?) {
         viewControllers.append(viewController.uiViewController)
-        baseFlowRouter.push(viewController: viewController, transition: transition, completion: completion)
+        parent.push(viewController: viewController, transition: transition, completion: completion)
     }
 
     public func pop(animated: Bool, completion: FlowPresentationRoutine.BaseCompletion?) {
-        guard viewControllers.last === baseFlowRouter.navigationViewControllable.uiViewController.viewControllers.last else {
+        guard viewControllers.last === parent.navigationViewControllable.uiViewController.viewControllers.last else {
             return
         }
-        baseFlowRouter.pop(animated: animated, completion: completion)
+        parent.pop(animated: animated, completion: completion)
         viewControllers.removeLast()
-
-        guard viewControllers.isEmpty else { return }
-        didBecomeEmpty()
     }
 
     // MARK: - ViewableSubflowRouting
@@ -68,7 +65,7 @@ open class ViewableSubflowRouter<InteractorType>: Router<InteractorType>,
         children
             .compactMap { $0 as? ViewableRouting }
             .filter { child in
-                baseFlowRouter.navigationViewControllable.uiViewController.viewControllers.contains(child.viewControllable.uiViewController) == false
+                parent.navigationViewControllable.uiViewController.viewControllers.contains(child.viewControllable.uiViewController) == false
             }
             .forEach { child in
                 self.detachChild(child)
@@ -85,18 +82,14 @@ open class ViewableSubflowRouter<InteractorType>: Router<InteractorType>,
     /// Initializer.
     ///
     /// - parameter interactor: The corresponding `Interactor` of this `Router`.
-    /// - parameter viewController: The corresponding `ViewController` of this `Router`.
-    public init(interactor: InteractorType, baseFlowRouter: ViewableFlowRouting & FlowPresentationRoutine) {
-        self.baseFlowRouter = baseFlowRouter
+    /// - parameter parent: The corresponding parent `ViewableSubflowParentRouting` for this `Router`.
+    public init(interactor: InteractorType, parent: ViewableSubflowParentRouting) {
+        self.parent = parent
         super.init(interactor: interactor)
     }
 
     /// This method is called from NavigationControllerDelegateProxyMethodsHandler to perform resources cleanup
     open func didDetachChild(child: ViewableRouting) {
-        fatalError("This method should be overridden by the subclass.")
-    }
-
-    open func didBecomeEmpty() {
         fatalError("This method should be overridden by the subclass.")
     }
 }
