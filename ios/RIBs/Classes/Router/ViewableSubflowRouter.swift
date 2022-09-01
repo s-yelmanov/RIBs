@@ -30,28 +30,32 @@ open class ViewableSubflowRouter<InteractorType>: Router<InteractorType>,
     public var viewablePresentation: ViewablePresentation.RawValue?
     public var viewControllable: ViewControllable { navigationViewControllable }
 
-    public let parent: ViewableSubflowParentRouting
+    public weak var parent: ViewableSubflowParentRouting?
 
     private var viewControllers: [UIViewController] = []
 
     // MARK: - FlowPresentationRoutine
 
-    public var navigationViewControllable: FlowViewControllable { parent.navigationViewControllable }
+    public var navigationViewControllable: FlowViewControllable { parent?.navigationViewControllable ?? UINavigationController() }
     public var flowTransition: FlowTransition {
-        get { parent.flowTransition }
-        set { parent.flowTransition = newValue }
+        get { parent?.flowTransition ?? .default }
+        set { parent?.flowTransition = newValue }
     }
 
     public func push(viewController: ViewControllable, transition: FlowTransition, completion: FlowPresentationRoutine.BaseCompletion?) {
         viewControllers.append(viewController.uiViewController)
-        parent.push(viewController: viewController, transition: transition, completion: completion)
+        parent?.push(viewController: viewController, transition: transition, completion: completion)
     }
 
     public func pop(animated: Bool, completion: FlowPresentationRoutine.BaseCompletion?) {
-        guard viewControllers.last === parent.navigationViewControllable.uiViewController.viewControllers.last else {
+        guard
+            let lastParentViewController = parent?.navigationViewControllable.uiViewController.viewControllers.last,
+            viewControllers.last === lastParentViewController
+        else {
             return
         }
-        parent.pop(animated: animated, completion: completion)
+
+        parent?.pop(animated: animated, completion: completion)
         viewControllers.removeLast()
     }
 
@@ -65,7 +69,8 @@ open class ViewableSubflowRouter<InteractorType>: Router<InteractorType>,
         children
             .compactMap { $0 as? ViewableRouting }
             .filter { child in
-                parent.navigationViewControllable.uiViewController.viewControllers.contains(child.viewControllable.uiViewController) == false
+                let viewControllers = parent?.navigationViewControllable.uiViewController.viewControllers
+                return viewControllers?.contains(child.viewControllable.uiViewController) == false
             }
             .forEach { child in
                 self.detachChild(child)
