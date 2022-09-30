@@ -21,8 +21,6 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.FrameLayout
 import com.google.common.truth.Truth.assertThat
-import com.nhaarman.mockitokotlin2.doReturn
-import com.nhaarman.mockitokotlin2.mock
 import com.uber.autodispose.AutoDispose
 import com.uber.autodispose.lifecycle.LifecycleEndedException
 import com.uber.rib.android.R
@@ -36,6 +34,8 @@ import io.reactivex.observers.TestObserver
 import io.reactivex.subjects.PublishSubject
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mockito.kotlin.doReturn
+import org.mockito.kotlin.mock
 import org.robolectric.Robolectric
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.RuntimeEnvironment
@@ -167,6 +167,23 @@ class RibActivityTest {
     val o = AndroidRecordingRx2Observer<Any>()
     Observable.just(Any()).`as`(AutoDispose.autoDisposable(activity)).subscribe(o)
     assertThat(o.takeError()).isInstanceOf(LifecycleEndedException::class.java)
+  }
+
+  @Test
+  fun rxActivity_shouldCallback_onWindowFocusChanged() {
+    val activityController = Robolectric.buildActivity(EmptyActivity::class.java)
+    val activity: EmptyActivity = activityController.setup().get()
+    val testSub = TestObserver<ActivityCallbackEvent.WindowFocus>()
+    activity.callbacks(ActivityCallbackEvent.WindowFocus::class.java).subscribe(testSub)
+    activity.onWindowFocusChanged(true)
+    activity.onWindowFocusChanged(false)
+    testSub.assertValueCount(2)
+    val receivedEvent1 = testSub.values()[0]
+    assertThat(receivedEvent1.type).isEqualTo(ActivityCallbackEvent.Type.WINDOW_FOCUS)
+    assertThat(receivedEvent1.hasFocus).isTrue()
+    val receivedEvent2 = testSub.values()[1]
+    assertThat(receivedEvent2.type).isEqualTo(ActivityCallbackEvent.Type.WINDOW_FOCUS)
+    assertThat(receivedEvent2.hasFocus).isFalse()
   }
 
   @Test
