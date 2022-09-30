@@ -16,7 +16,7 @@
 
 import Combine
 
-public typealias StepPublisher<NextActionableItem, NextValue> = AnyPublisher<(NextActionableItem, NextValue), Error>
+public typealias StepPublisher<NextActionableItem, NextValue, ErrorType: Error> = AnyPublisher<(NextActionableItem, NextValue), ErrorType>
 
 /// Defines the base class for a sequence of steps that execute a flow through the application RIB tree.
 ///
@@ -25,7 +25,7 @@ public typealias StepPublisher<NextActionableItem, NextValue> = AnyPublisher<(Ne
 /// RIB.
 ///
 /// A workflow should always start at the root of the tree.
-open class Workflow<ActionableItemType> {
+open class Workflow<ActionableItemType, ErrorType: Error> {
 
     /// Called when the last step observable is completed.
     ///
@@ -47,7 +47,7 @@ open class Workflow<ActionableItemType> {
     ///
     /// Subclasses should override this method if they want to execute logic at this point in the `Workflow` lifecycle.
     /// The default implementation does nothing.
-    open func didReceiveError(_ error: Error) {
+    open func didReceiveError(_ error: ErrorType) {
         // No-op
     }
 
@@ -60,8 +60,8 @@ open class Workflow<ActionableItemType> {
     /// - returns: The next step.
     // swiftlint:disable:next generic_type_name
     public final func onStep<NextActionableItemType, NextValueType>(
-        _ onStep: @escaping (ActionableItemType) -> StepPublisher<NextActionableItemType, NextValueType>
-    ) -> Step<ActionableItemType, NextActionableItemType, NextValueType> {
+        _ onStep: @escaping (ActionableItemType) -> StepPublisher<NextActionableItemType, NextValueType, ErrorType>
+    ) -> Step<ActionableItemType, NextActionableItemType, NextValueType, ErrorType> {
         return Step(workflow: self, publisher: subject.prefix(1).eraseToAnyPublisher())
             .onStep { (actionableItem: ActionableItemType, _) in
                 onStep(actionableItem)
@@ -84,7 +84,7 @@ open class Workflow<ActionableItemType> {
 
     // MARK: - Private
 
-    private let subject = PassthroughSubject<(ActionableItemType, ()), Error>()
+    private let subject = PassthroughSubject<(ActionableItemType, ()), ErrorType>()
     private var didInvokeComplete = false
 
     /// The composite disposable that contains all subscriptions including the original workflow
@@ -109,14 +109,14 @@ open class Workflow<ActionableItemType> {
 /// steps.
 ///
 /// Steps are asynchronous by nature.
-open class Step<WorkflowActionableItemType, ActionableItemType, ValueType> {
+open class Step<WorkflowActionableItemType, ActionableItemType, ValueType, ErrorType: Error> {
 
-    private let workflow: Workflow<WorkflowActionableItemType>
-    private var publisher: AnyPublisher<(ActionableItemType, ValueType), Error>
+    private let workflow: Workflow<WorkflowActionableItemType, ErrorType>
+    private var publisher: AnyPublisher<(ActionableItemType, ValueType), ErrorType>
 
     fileprivate init(
-        workflow: Workflow<WorkflowActionableItemType>,
-        publisher: AnyPublisher<(ActionableItemType, ValueType), Error>
+        workflow: Workflow<WorkflowActionableItemType, ErrorType>,
+        publisher: AnyPublisher<(ActionableItemType, ValueType), ErrorType>
     ) {
         self.workflow = workflow
         self.publisher = publisher
@@ -128,10 +128,10 @@ open class Step<WorkflowActionableItemType, ActionableItemType, ValueType> {
     /// - returns: The next step.
     // swiftlint:disable:next generic_type_name
     public final func onStep<NextActionableItemType, NextValueType>(
-        _ onStep: @escaping (ActionableItemType, ValueType) -> StepPublisher<NextActionableItemType, NextValueType>
-    ) -> Step<WorkflowActionableItemType, NextActionableItemType, NextValueType> {
+        _ onStep: @escaping (ActionableItemType, ValueType) -> StepPublisher<NextActionableItemType, NextValueType, ErrorType>
+    ) -> Step<WorkflowActionableItemType, NextActionableItemType, NextValueType, ErrorType> {
         let confinedNextStep = publisher
-            .map { (actionableItem, value) -> AnyPublisher<(Bool, ActionableItemType, ValueType), Error> in
+            .map { (actionableItem, value) -> AnyPublisher<(Bool, ActionableItemType, ValueType), ErrorType> in
                 // We cannot use generic constraint here since Swift requires constraints be
                 // satisfied by concrete types, preventing using protocol as actionable type.
                 if let interactor = actionableItem as? Interactable {
@@ -140,11 +140,11 @@ open class Step<WorkflowActionableItemType, ActionableItemType, ValueType> {
                         .map({ (isActive: Bool) -> (Bool, ActionableItemType, ValueType) in
                             (isActive, actionableItem, value)
                         })
-                        .setFailureType(to: Error.self)
+                        .setFailureType(to: ErrorType.self)
                         .eraseToAnyPublisher()
                 } else {
                     return Just((true, actionableItem, value))
-                        .setFailureType(to: Error.self)
+                        .setFailureType(to: ErrorType.self)
                         .eraseToAnyPublisher()
                 }
             }
@@ -154,7 +154,7 @@ open class Step<WorkflowActionableItemType, ActionableItemType, ValueType> {
             }
             .prefix(1)
             // swiftlint:disable:next line_length
-            .map { (_, actionableItem: ActionableItemType, value: ValueType) -> StepPublisher<NextActionableItemType, NextValueType> in
+            .map { (_, actionableItem: ActionableItemType, value: ValueType) -> StepPublisher<NextActionableItemType, NextValueType, ErrorType> in
                 onStep(actionableItem, value)
             }
             .switchToLatest()
@@ -162,7 +162,7 @@ open class Step<WorkflowActionableItemType, ActionableItemType, ValueType> {
             .share()
             .eraseToAnyPublisher()
 
-        return Step<WorkflowActionableItemType, NextActionableItemType, NextValueType>(
+        return Step<WorkflowActionableItemType, NextActionableItemType, NextValueType, ErrorType>(
             workflow: workflow,
             publisher: confinedNextStep
         )
@@ -173,8 +173,8 @@ open class Step<WorkflowActionableItemType, ActionableItemType, ValueType> {
     /// - parameter onError: The closure to execute when an error occurs.
     /// - returns: This step.
     public final func onError(
-        _ onError: @escaping ((Error) -> Void)
-    ) -> Step<WorkflowActionableItemType, ActionableItemType, ValueType> {
+        _ onError: @escaping ((ErrorType) -> Void)
+    ) -> Step<WorkflowActionableItemType, ActionableItemType, ValueType, ErrorType> {
         publisher = publisher
             .handleEvents(receiveCompletion: { result in
                 if case .failure(let error) = result {
@@ -189,7 +189,7 @@ open class Step<WorkflowActionableItemType, ActionableItemType, ValueType> {
     ///
     /// - returns: The committed `Workflow`.
     @discardableResult
-    public final func commit() -> Workflow<WorkflowActionableItemType> {
+    public final func commit() -> Workflow<WorkflowActionableItemType, ErrorType> {
         // Side-effects must be chained at the last publisher sequence, since errors and complete
         // events can be emitted by any publishers on any steps of the workflow.
         let cancellable = publisher
@@ -211,7 +211,7 @@ open class Step<WorkflowActionableItemType, ActionableItemType, ValueType> {
     /// Convert the `Workflow` into an obseravble.
     ///
     /// - returns: The observable representation of this `Workflow`.
-    public final func asPublisher() -> AnyPublisher<(ActionableItemType, ValueType), Error> {
+    public final func asPublisher() -> AnyPublisher<(ActionableItemType, ValueType), ErrorType> {
         return publisher
     }
 }
@@ -225,10 +225,10 @@ public extension Publisher {
     /// - returns: The newly forked step in the workflow. `nil` if this observable does not conform to the required
     ///   generic type of (ActionableItemType, ValueType).
     // swiftlint:disable:next generic_type_name
-    func fork<WorkflowActionableItemType, ActionableItemType, ValueType>(
-        _ workflow: Workflow<WorkflowActionableItemType>
-    ) -> Step<WorkflowActionableItemType, ActionableItemType, ValueType>? {
-        if let stepPublisher = self as? AnyPublisher<(ActionableItemType, ValueType), Error> {
+    func fork<WorkflowActionableItemType, ActionableItemType, ValueType, ErrorType>(
+        _ workflow: Workflow<WorkflowActionableItemType, ErrorType>
+    ) -> Step<WorkflowActionableItemType, ActionableItemType, ValueType, ErrorType>? {
+        if let stepPublisher = self as? AnyPublisher<(ActionableItemType, ValueType), ErrorType> {
             workflow.didFork()
             return Step(workflow: workflow, publisher: stepPublisher)
         }
@@ -248,7 +248,7 @@ public extension AnyCancellable {
     /// - note: This is the preferred method when trying to confine a subscription to the lifecycle of a `Workflow`.
     ///
     /// - parameter workflow: The workflow to dispose the subscription with.
-    func cancelWith<ActionableItemType>(workflow: Workflow<ActionableItemType>) {
+    func cancelWith<ActionableItemType, ErrorType>(workflow: Workflow<ActionableItemType, ErrorType>) {
         workflow.compositeCancellable.insert(self)
     }
 }

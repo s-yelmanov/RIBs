@@ -43,7 +43,7 @@ open class Component<DependencyType>: Dependency {
     ///
     /// - parameter factory: The closure to construct the dependency.
     /// - returns: The instance.
-    public final func shared<T>(__function: String = #function, _ factory: () -> T) -> T {
+    public final func shared<T>(__function: String = #function, tag: String = "", _ factory: () -> T) -> T {
         lock.lock()
         defer {
             lock.unlock()
@@ -53,12 +53,13 @@ open class Component<DependencyType>: Dependency {
         // see https://bugs.swift.org/browse/SR-8704.
         // Without this measure, calling `shared` from a function that returns an optional type
         // will always pass the check below and return nil if the instance is not initialized.
-        if let instance = (sharedInstances[__function] as? T?) ?? nil {
+        let key = __function + tag
+        if let instance = (sharedInstances[key] as? T?) ?? nil {
             return instance
         }
 
         let instance = factory()
-        sharedInstances[__function] = instance
+        sharedInstances[key] = instance
 
         return instance
     }
