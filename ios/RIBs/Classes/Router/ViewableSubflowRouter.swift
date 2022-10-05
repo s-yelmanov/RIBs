@@ -78,6 +78,8 @@ open class ViewableSubflowRouter<InteractorType>: Router<InteractorType>,
                 self.detachChild(child)
                 self.didDetachChild(child: child)
             }
+
+        ensureViewStackConsistency()
     }
 
     public func ensureViewStackConsistency() {
