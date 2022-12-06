@@ -14,7 +14,7 @@
 //  limitations under the License.
 //
 
-import Foundation
+import UIKit
 
 /// The base protocol for all routers that own navigation controller.
 public protocol ViewableFlowRouting: Routing {
@@ -33,7 +33,8 @@ public protocol ViewableFlowRouting: Routing {
 // swiftlint:disable:next generic_type_name
 open class ViewableFlowRouter<FlowInteractorType, FlowViewControllerType>: Router<FlowInteractorType>,
                                                                            ViewableFlowRouting,
-                                                                           FlowPresentationRoutine {
+                                                                           FlowPresentationRoutine,
+                                                                           AdaptiveViewableRouting {
 
     public var viewControllable: ViewControllable { navigationViewControllable }
 
@@ -107,6 +108,12 @@ open class ViewableFlowRouter<FlowInteractorType, FlowViewControllerType>: Route
             animated: flowTransition.animated,
             completion: completion
         )
+    }
+
+    // MARK: - AdaptiveViewableRouting
+
+    public func presentationControllerDidDismiss(_ presentationController: UIPresentationController) {
+        detachCurrentChild()
     }
 
     // MARK: - Private

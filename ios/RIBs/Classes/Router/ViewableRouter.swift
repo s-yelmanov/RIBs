@@ -14,6 +14,7 @@
 //  limitations under the License.
 //
 
+import UIKit
 import Combine
 
 /// The base protocol for all routers that own their own view controllers.
@@ -38,7 +39,10 @@ public extension ViewableRouting {
 /// A `Router` acts on inputs from its corresponding interactor, to manipulate application state and view state,
 /// forming a tree of routers that drives the tree of view controllers. Router drives the lifecycle of its owned
 /// interactor. `Router`s should always use helper builders to instantiate children `Router`s.
-open class ViewableRouter<InteractorType, ViewControllerType>: Router<InteractorType>, BasePresentationRoutine, ViewableRouting {
+open class ViewableRouter<InteractorType, ViewControllerType>: Router<InteractorType>,
+                                                               BasePresentationRoutine,
+                                                               ViewableRouting,
+                                                               AdaptiveViewableRouting {
 
     /// The corresponding `ViewController` owned by this `Router`.
     public let viewController: ViewControllerType
@@ -70,6 +74,12 @@ open class ViewableRouter<InteractorType, ViewControllerType>: Router<Interactor
         setupViewControllerLeakDetection()
 
         super.internalDidLoad()
+    }
+
+    // MARK: - AdaptiveViewableRouting
+
+    public func presentationControllerDidDismiss(_ presentationController: UIPresentationController) {
+        detachCurrentChild()
     }
 
     // MARK: - Private
