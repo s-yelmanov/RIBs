@@ -14,7 +14,6 @@
 //  limitations under the License.
 //
 
-import Foundation
 import UIKit
 
 /// The base protocol for all routers that own navigation controller.
@@ -28,7 +27,8 @@ public protocol ViewableSubflowRouting: Routing {
 public typealias ViewableSubflowParentRouting = ViewableFlowRouting & FlowPresentationRoutine
 open class ViewableSubflowRouter<InteractorType>: Router<InteractorType>,
                                                   ViewableSubflowRouting,
-                                                  SubflowPresentationRoutine {
+                                                  SubflowPresentationRoutine,
+                                                  AdaptiveViewableRouting {
     public var viewablePresentation: ViewablePresentation.RawValue?
     public var viewControllable: ViewControllable { navigationViewControllable }
 
@@ -86,6 +86,12 @@ open class ViewableSubflowRouter<InteractorType>: Router<InteractorType>,
         viewControllers = viewControllers.filter { controller in
             navigationViewControllable.uiViewController.viewControllers.contains(controller)
         }
+    }
+
+    // MARK: - AdaptiveViewableRouting
+
+    public func presentationControllerDidDismiss(_ presentationController: UIPresentationController) {
+        detachCurrentChild()
     }
 
     /// Initializer.

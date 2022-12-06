@@ -23,7 +23,7 @@ public enum ViewablePresentation {
     case asRoot(in: UIWindow, with: UIWindow.Transition? = nil)
     case embedded(in: ViewControllable, contentView: UIView, completion: ViewControllableCompletion? = nil)
     case modally(
-        on: ViewControllable,
+        on: AdaptiveViewableRouting,
         presentationStyle: UIModalPresentationStyle = .automatic,
         animated: Bool = true,
         completion: BaseCompletion? = nil
@@ -49,9 +49,10 @@ public enum ViewablePresentation {
             viewController.uiViewController.didMove(toParent: parent.uiViewController)
             completion?(viewController)
 
-        case .modally(let baseViewController, let presentationStyle, let animated, let completion):
+        case .modally(let router, let presentationStyle, let animated, let completion):
             viewController.uiViewController.modalPresentationStyle = presentationStyle
-            baseViewController.uiViewController.present(
+            viewController.uiViewController.presentationController?.delegate = router
+            router.viewControllable.uiViewController.present(
                 viewController.uiViewController,
                 animated: animated,
                 completion: completion
