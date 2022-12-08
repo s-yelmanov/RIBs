@@ -31,7 +31,7 @@ public protocol ViewableRouting: Routing {
 }
 
 public extension ViewableRouting {
-    var routeIdentifier: String { String(describing: self) }
+    var routeIdentifier: String { String(describing: Self.self) }
 }
 
 /// The base class of all routers that owns view controllers, representing application states.
