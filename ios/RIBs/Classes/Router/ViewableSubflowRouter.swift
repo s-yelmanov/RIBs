@@ -66,7 +66,13 @@ open class ViewableSubflowRouter<InteractorType>: Router<InteractorType>,
     public func ensureChildrenConsistency() {
         children
             .compactMap { $0 as? ViewableSubflowRouting }
-            .forEach { $0.ensureChildrenConsistency() }
+            .forEach { subflow in
+                subflow.ensureChildrenConsistency()
+
+                guard subflow.children.isEmpty else { return }
+                self.detachChild(subflow)
+                self.didDetachSubflow(subflow: subflow)
+            }
 
         children
             .compactMap { $0 as? ViewableRouting }
@@ -106,5 +112,9 @@ open class ViewableSubflowRouter<InteractorType>: Router<InteractorType>,
     /// This method is called from NavigationControllerDelegateProxyMethodsHandler to perform resources cleanup
     open func didDetachChild(child: ViewableRouting) {
         fatalError("This method should be overridden by the subclass.")
+    }
+
+    open func didDetachSubflow(subflow: ViewableSubflowRouting) {
+        // No-op
     }
 }
