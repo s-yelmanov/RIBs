@@ -54,19 +54,51 @@ open class Component<DependencyType>: Dependency {
         // Without this measure, calling `shared` from a function that returns an optional type
         // will always pass the check below and return nil if the instance is not initialized.
         let key = __function + tag
-        if let instance = (sharedInstances[key] as? T?) ?? nil {
+        if let instance = (sharedStrongInstances[key] as? T?) ?? nil {
             return instance
         }
 
         let instance = factory()
-        sharedInstances[key] = instance
+        sharedStrongInstances[key] = instance
+
+        return instance
+    }
+
+    /// Used to create a weak shared dependency in your `Component` sub-class.
+    /// Weak shared dependencies are not retained and reused by the component only if there is at least one instance owner.
+    /// Each dependent asking for this dependency will receive the same instance while the other owner is alive.
+    /// Otherwise a new instance is created.
+    ///
+    /// - note: Any shared dependency's constructor may not switch threads as this might cause a deadlock.
+    /// - note: Weak shared scope is separated from the common one.
+    ///
+    /// - parameter factory: The closure to construct the dependency.
+    /// - returns: The instance.
+    public final func sharedWeak<T>(__function: String = #function, tag: String = "", _ factory: () -> T) -> T {
+        lock.lock()
+        defer {
+            lock.unlock()
+        }
+
+        // Additional nil coalescing is needed to mitigate a Swift bug appearing in Xcode 10.
+        // see https://bugs.swift.org/browse/SR-8704.
+        // Without this measure, calling `shared` from a function that returns an optional type
+        // will always pass the check below and return nil if the instance is not initialized.
+        let key = __function + tag
+        if let instance = (sharedWeakInstances.object(forKey: key as NSString) as? T?) ?? nil {
+            return instance
+        }
+
+        let instance = factory()
+        sharedWeakInstances.setObject(instance as AnyObject, forKey: key as NSString)
 
         return instance
     }
 
     // MARK: - Private
 
-    private var sharedInstances = [String: Any]()
+    private var sharedStrongInstances = [String: Any]()
+    private var sharedWeakInstances = NSMapTable<NSString, AnyObject>(keyOptions: .strongMemory, valueOptions: .weakMemory)
     private let lock = NSRecursiveLock()
 }
 
