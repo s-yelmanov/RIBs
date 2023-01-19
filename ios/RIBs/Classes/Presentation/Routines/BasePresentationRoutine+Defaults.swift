@@ -16,35 +16,6 @@
 
 import Foundation
 
-public extension BasePresentationRoutine {
-    func show(viewController: ViewControllable, with presentation: ViewablePresentation) {
-        self.viewablePresentation = presentation.rawValue
-        presentation.execute(with: viewController)
-    }
-
-    func hide(animated: Bool = true, completion: BaseCompletion? = nil) {
-        guard let presentation = viewablePresentation else {
-            assertionFailure("Attempt to dismiss not presented component")
-            completion?()
-            return
-        }
-
-        switch presentation {
-        case .asRoot:
-            fatalError("Attempt to dismiss a 'ViewController presented as window root'")
-
-        case .modally:
-            viewControllable.uiViewController.dismiss(animated: animated, completion: completion)
-
-        case .embedded:
-            viewControllable.uiViewController.view.removeFromSuperview()
-            viewControllable.uiViewController.removeFromParent()
-        }
-
-        viewablePresentation = nil
-    }
-}
-
 public extension BasePresentationRoutine where Self: ViewableRouting {
     func showAttached(router: ViewableFlowRouting, with presentation: ViewablePresentation) {
         attachChild(router)
@@ -63,6 +34,33 @@ public extension BasePresentationRoutine where Self: ViewableRouting {
 }
 
 public extension BasePresentationRoutine where Self: ViewableFlowRouting {
+    func showAttached(router: ViewableFlowRouting, with presentation: ViewablePresentation) {
+        attachChild(router)
+        show(viewController: router.navigationViewControllable, with: presentation)
+    }
+
+    func showAttached(router: ViewableRouting, with presentation: ViewablePresentation) {
+        attachChild(router)
+        show(viewController: router.viewControllable, with: presentation)
+    }
+
+    func hideDetached(animated: Bool = true, completion: BaseCompletion? = nil) {
+        detachCurrentChild()
+        hide(animated: animated, completion: completion)
+    }
+}
+
+public extension BasePresentationRoutine where Self: ViewableSubflowRouting {
+    func showAttached(router: ViewableSubflowRouting, with presentation: ViewablePresentation) {
+        guard let navigationController = router.parent?.navigationViewControllable else {
+            assertionFailure("Attempt to attach subflow without parent navigation")
+            return
+        }
+
+        attachChild(router)
+        show(viewController: navigationController, with: presentation)
+    }
+
     func showAttached(router: ViewableFlowRouting, with presentation: ViewablePresentation) {
         attachChild(router)
         show(viewController: router.navigationViewControllable, with: presentation)

@@ -25,3 +25,32 @@ public protocol BasePresentationRoutine: AnyObject {
     func show(viewController: ViewControllable, with presentation: ViewablePresentation)
     func hide(animated: Bool, completion: BaseCompletion?)
 }
+
+public extension BasePresentationRoutine {
+    func show(viewController: ViewControllable, with presentation: ViewablePresentation) {
+        self.viewablePresentation = presentation.rawValue
+        presentation.execute(with: viewController)
+    }
+
+    func hide(animated: Bool = true, completion: BaseCompletion? = nil) {
+        guard let presentation = viewablePresentation else {
+            assertionFailure("Attempt to dismiss not presented component")
+            completion?()
+            return
+        }
+
+        switch presentation {
+        case .asRoot:
+            fatalError("Attempt to dismiss a 'ViewController presented as window root'")
+
+        case .modally:
+            viewControllable.uiViewController.dismiss(animated: animated, completion: completion)
+
+        case .embedded:
+            viewControllable.uiViewController.view.removeFromSuperview()
+            viewControllable.uiViewController.removeFromParent()
+        }
+
+        viewablePresentation = nil
+    }
+}

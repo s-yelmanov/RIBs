@@ -50,9 +50,8 @@ open class ViewableSubflowRouter<InteractorType>: Router<InteractorType>,
     }
 
     public func pop(animated: Bool, completion: FlowPresentationRoutine.BaseCompletion?) {
-        guard
-            let lastParentViewController = parent?.navigationViewControllable.uiViewController.viewControllers.last,
-            viewControllers.last === lastParentViewController
+        guard let lastParentViewController = parent?.navigationViewControllable.uiViewController.viewControllers.last,
+              viewControllers.last === lastParentViewController
         else {
             return
         }
@@ -111,9 +110,10 @@ open class ViewableSubflowRouter<InteractorType>: Router<InteractorType>,
 
     /// This method is called from NavigationControllerDelegateProxyMethodsHandler to perform resources cleanup
     open func didDetachChild(child: ViewableRouting) {
-        fatalError("This method should be overridden by the subclass.")
+        // No-op
     }
 
+    /// This method is called once the subflow is being detached to perform resources cleanup
     open func didDetachSubflow(subflow: ViewableSubflowRouting) {
         // No-op
     }

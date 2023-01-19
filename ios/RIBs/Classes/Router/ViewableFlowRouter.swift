@@ -66,8 +66,9 @@ open class ViewableFlowRouter<FlowInteractorType, FlowViewControllerType>: Route
         self.navigationViewControllable.uiViewController.delegate = navigationControllerDelegateProxy
     }
 
+    /// This method is called once the component becomes active. Override it for routing to the initial flow component
     open func routeToInitialComponent() {
-        fatalError("This method should be overridden by the subclass.")
+        // No-op
     }
 
     // MARK: - Internal
@@ -149,9 +150,10 @@ open class ViewableFlowRouter<FlowInteractorType, FlowViewControllerType>: Route
 
     /// This method is called from NavigationControllerDelegateProxyMethodsHandler to perform resources cleanup
     open func didDetachChild(child: ViewableRouting) {
-        fatalError("This method should be overridden by the subclass.")
+        // No-op
     }
 
+    /// This method is called once the subflow is being detached to perform resources cleanup
     open func didDetachSubflow(subflow: ViewableSubflowRouting) {
         // No-op
     }
