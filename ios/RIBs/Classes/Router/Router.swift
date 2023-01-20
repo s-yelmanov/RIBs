@@ -58,7 +58,7 @@ public protocol Routing: RouterScope {
     /// Attaches the given router as a child.
     ///
     /// - parameter child: The child router to attach.
-    func attachChild(_ child: Routing)
+    func attachChild(_ child: Routing, at index: Int?)
 
     /// Detaches the given router from the tree.
     ///
@@ -68,6 +68,12 @@ public protocol Routing: RouterScope {
     /// Detaches the topmost router from the tree.
     ///
     func detachCurrentChild()
+}
+
+public extension Routing {
+    func attachChild(_ child: Routing) {
+        attachChild(child, at: nil)
+    }
 }
 
 /// The base class of all routers that does not own view controllers, representing application states.
@@ -135,10 +141,14 @@ open class Router<InteractorType>: NSObject, Routing {
     /// Attaches the given router as a child.
     ///
     /// - parameter child: The child `Router` to attach.
-    public final func attachChild(_ child: Routing) {
+    public final func attachChild(_ child: Routing, at index: Int? = nil) {
         assert(!(children.contains { $0 === child }), "Attempt to attach child: \(child), which is already attached to \(self).")
 
-        children.append(child)
+        if let index {
+            children.insert(child, at: index)
+        } else {
+            children.append(child)
+        }
 
         // Activate child first before loading. Router usually attaches immutable children in didLoad.
         // We need to make sure the RIB is activated before letting it attach immutable children.

@@ -28,8 +28,8 @@ public extension BasePresentationRoutine where Self: ViewableRouting {
     }
 
     func hideDetached(animated: Bool = true, completion: BaseCompletion? = nil) {
-        detachCurrentChild()
         hide(animated: animated, completion: completion)
+        detachCurrentChild()
     }
 }
 
@@ -45,22 +45,12 @@ public extension BasePresentationRoutine where Self: ViewableFlowRouting {
     }
 
     func hideDetached(animated: Bool = true, completion: BaseCompletion? = nil) {
-        detachCurrentChild()
         hide(animated: animated, completion: completion)
+        detachCurrentChild()
     }
 }
 
 public extension BasePresentationRoutine where Self: ViewableSubflowRouting {
-    func showAttached(router: ViewableSubflowRouting, with presentation: ViewablePresentation) {
-        guard let navigationController = router.parent?.navigationViewControllable else {
-            assertionFailure("Attempt to attach subflow without parent navigation")
-            return
-        }
-
-        attachChild(router)
-        show(viewController: navigationController, with: presentation)
-    }
-
     func showAttached(router: ViewableFlowRouting, with presentation: ViewablePresentation) {
         attachChild(router)
         show(viewController: router.navigationViewControllable, with: presentation)
@@ -72,7 +62,7 @@ public extension BasePresentationRoutine where Self: ViewableSubflowRouting {
     }
 
     func hideDetached(animated: Bool = true, completion: BaseCompletion? = nil) {
-        detachCurrentChild()
         hide(animated: animated, completion: completion)
+        detachCurrentChild()
     }
 }

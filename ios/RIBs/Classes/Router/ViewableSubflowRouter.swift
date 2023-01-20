@@ -19,9 +19,14 @@ import UIKit
 /// The base protocol for all routers that own navigation controller.
 public protocol ViewableSubflowRouting: Routing {
     var parent: ViewableSubflowParentRouting? { get }
+    var routeIdentifier: String { get }
 
     func ensureChildrenConsistency()
     func ensureViewStackConsistency()
+}
+
+public extension ViewableSubflowRouting {
+    var routeIdentifier: String { String(describing: Self.self) }
 }
 
 public typealias ViewableSubflowParentRouting = ViewableFlowRouting & FlowPresentationRoutine
@@ -36,68 +41,6 @@ open class ViewableSubflowRouter<InteractorType>: Router<InteractorType>,
 
     private var viewControllers: [UIViewController] = []
 
-    // MARK: - FlowPresentationRoutine
-
-    public var navigationViewControllable: FlowViewControllable { parent?.navigationViewControllable ?? UINavigationController() }
-    public var flowTransition: FlowTransition {
-        get { parent?.flowTransition ?? .default }
-        set { parent?.flowTransition = newValue }
-    }
-
-    public func push(viewController: ViewControllable, transition: FlowTransition, completion: FlowPresentationRoutine.BaseCompletion?) {
-        viewControllers.append(viewController.uiViewController)
-        parent?.push(viewController: viewController, transition: transition, completion: completion)
-    }
-
-    public func pop(animated: Bool, completion: FlowPresentationRoutine.BaseCompletion?) {
-        guard let lastParentViewController = parent?.navigationViewControllable.uiViewController.viewControllers.last,
-              viewControllers.last === lastParentViewController
-        else {
-            return
-        }
-
-        parent?.pop(animated: animated, completion: completion)
-        viewControllers.removeLast()
-    }
-
-    // MARK: - ViewableSubflowRouting
-
-    public func ensureChildrenConsistency() {
-        children
-            .compactMap { $0 as? ViewableSubflowRouting }
-            .forEach { subflow in
-                subflow.ensureChildrenConsistency()
-
-                guard subflow.children.isEmpty else { return }
-                self.detachChild(subflow)
-                self.didDetachSubflow(subflow: subflow)
-            }
-
-        children
-            .compactMap { $0 as? ViewableRouting }
-            .filter { child in
-                let viewControllers = parent?.navigationViewControllable.uiViewController.viewControllers
-                return viewControllers?.contains(child.viewControllable.uiViewController) == false
-            }
-            .forEach { child in
-                self.detachChild(child)
-                self.didDetachChild(child: child)
-            }
-
-        ensureViewStackConsistency()
-    }
-
-    public func ensureViewStackConsistency() {
-        viewControllers = viewControllers.filter { controller in
-            navigationViewControllable.uiViewController.viewControllers.contains(controller)
-        }
-    }
-
-    // MARK: - AdaptiveViewableRouting
-
-    public func presentationControllerDidDismiss(_ presentationController: UIPresentationController) {
-        detachCurrentChild()
-    }
 
     /// Initializer.
     ///
@@ -116,5 +59,73 @@ open class ViewableSubflowRouter<InteractorType>: Router<InteractorType>,
     /// This method is called once the subflow is being detached to perform resources cleanup
     open func didDetachSubflow(subflow: ViewableSubflowRouting) {
         // No-op
+    }
+
+    // MARK: - FlowPresentationRoutine
+
+    public var navigationViewControllable: FlowViewControllable { parent?.navigationViewControllable ?? UINavigationController() }
+    public var flowTransition: FlowTransition {
+        get { parent?.flowTransition ?? .default }
+        set { parent?.flowTransition = newValue }
+    }
+
+    public func push(viewController: ViewControllable, transition: FlowTransition, completion: FlowPresentationRoutine.BaseCompletion?) {
+        parent?.push(viewController: viewController, transition: transition, completion: completion)
+        ensureViewStackConsistency()
+    }
+
+    public func pop(animated: Bool, completion: FlowPresentationRoutine.BaseCompletion?) {
+        guard viewControllers.last === parentViewControllersStack.last else { return }
+        parent?.pop(animated: animated, completion: completion)
+        ensureViewStackConsistency()
+    }
+
+    // MARK: - ViewableSubflowRouting
+
+    public func ensureChildrenConsistency() {
+        viewableSubflowChildren
+            .forEach { subflow in
+                subflow.ensureChildrenConsistency()
+
+                guard subflow.children.isEmpty else { return }
+                self.detachChild(subflow)
+                self.didDetachSubflow(subflow: subflow)
+            }
+
+        children
+            .compactMap { $0 as? ViewableRouting }
+            .filter { child in
+                parentViewControllersStack.contains(child.viewControllable.uiViewController) == false
+            }
+            .forEach { child in
+                self.detachChild(child)
+                self.didDetachChild(child: child)
+            }
+
+        ensureViewStackConsistency()
+    }
+
+    public func ensureViewStackConsistency() {
+        let viewableChildren = viewableChildren.map(\.viewControllable.uiViewController)
+        viewControllers = parentViewControllersStack.filter(viewableChildren.contains)
+    }
+
+    // MARK: - AdaptiveViewableRouting
+
+    public func presentationControllerDidDismiss(_ presentationController: UIPresentationController) {
+        detachCurrentChild()
+    }
+}
+
+extension ViewableSubflowRouting {
+    var allChildViewControllers: [UIViewController] {
+        children.reduce(.init()) { result, next -> [UIViewController] in
+            if let subflow = next as? ViewableSubflowRouting {
+                return result + subflow.allChildViewControllers
+            } else if let viewableChild = next as? ViewableRouting {
+                return result + [viewableChild.viewControllable.uiViewController]
+            }
+            return result
+        }
     }
 }
