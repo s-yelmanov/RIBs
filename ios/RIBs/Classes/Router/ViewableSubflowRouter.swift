@@ -32,7 +32,7 @@ public extension ViewableSubflowRouting {
 public typealias ViewableSubflowParentRouting = ViewableFlowRouting & FlowPresentationRoutine
 open class ViewableSubflowRouter<InteractorType>: Router<InteractorType>,
                                                   ViewableSubflowRouting,
-                                                  SubflowPresentationRoutine,
+                                                  FlowPresentationRoutine,
                                                   AdaptiveViewableRouting {
     public var viewablePresentation: ViewablePresentation.RawValue?
     public var viewControllable: ViewControllable { navigationViewControllable }
@@ -75,7 +75,9 @@ open class ViewableSubflowRouter<InteractorType>: Router<InteractorType>,
     }
 
     public func pop(animated: Bool, completion: FlowPresentationRoutine.BaseCompletion?) {
-        guard viewControllers.last === parentViewControllersStack.last else { return }
+        guard viewControllers.last === parentViewControllersStack.last else {
+            return assertionFailure("Attempt to pop view controller that current subflow doesn't own")
+        }
         parent?.pop(animated: animated, completion: completion)
         ensureViewStackConsistency()
     }

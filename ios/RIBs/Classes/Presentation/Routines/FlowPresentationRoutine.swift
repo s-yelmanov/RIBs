@@ -16,15 +16,20 @@
 
 import Foundation
 
-public protocol FlowPresentationRoutine: BasePresentationRoutine {
+public protocol NavigationContainable {
+    var navigationViewControllable: FlowViewControllable { get }
+}
+
+public protocol FlowPresentationRoutine: BasePresentationRoutine, NavigationContainable {
     typealias BaseCompletion = () -> Void
 
     var flowTransition: FlowTransition { get set }
-    var navigationViewControllable: FlowViewControllable { get }
 
     func push(viewController: ViewControllable, transition: FlowTransition, completion: BaseCompletion?)
     func pop(animated: Bool, completion: BaseCompletion?)
 
     func pushAttached(router: ViewableRouting, transition: FlowTransition, completion: BaseCompletion?)
     func popDetached(animated: Bool, completion: BaseCompletion?)
+
+    func ensureViewStackConsistency()
 }

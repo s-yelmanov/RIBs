@@ -29,7 +29,7 @@ public extension FlowPresentationRoutine where Self: Routing {
     }
 }
 
-public extension FlowPresentationRoutine where Self: ViewableFlowRouting {
+public extension FlowPresentationRoutine where Self: Routing & NavigationContainable {
     /// Pops all children but the first one this subflow owns, which controller exists in the navigation stack
     func popToRoot(animated: Bool = true, transition: FlowTransition = .default, completion: BaseCompletion? = nil) {
         var childViewableRouters = childViewableRoutersInFlow
@@ -46,6 +46,7 @@ public extension FlowPresentationRoutine where Self: ViewableFlowRouting {
             animated: animated,
             completion: completion
         )
+        ensureViewStackConsistency()
     }
 
     /// Pops all children this subflow owns after the one with specified identifier
@@ -76,6 +77,7 @@ public extension FlowPresentationRoutine where Self: ViewableFlowRouting {
             animated: animated,
             completion: completion
         )
+        ensureViewStackConsistency()
     }
 
     /// Pops the subflow with the specified `identifier` from children
@@ -94,6 +96,7 @@ public extension FlowPresentationRoutine where Self: ViewableFlowRouting {
             completion: completion
         )
         detachChild(subflow)
+        ensureViewStackConsistency()
     }
 
     /// Pops child with the specified `identifier` from children
@@ -112,6 +115,7 @@ public extension FlowPresentationRoutine where Self: ViewableFlowRouting {
             completion: completion
         )
         detachChild(module)
+        ensureViewStackConsistency()
     }
 
     /// Replaces the last child in navigation stack with the specified `ViewableRouting`
@@ -138,6 +142,7 @@ public extension FlowPresentationRoutine where Self: ViewableFlowRouting {
             animated: true,
             completion: completion
         )
+        ensureViewStackConsistency()
     }
 
     /// Replaces the child with specified `identifier` in navigation stack with the specified `ViewableRouting`
@@ -162,10 +167,11 @@ public extension FlowPresentationRoutine where Self: ViewableFlowRouting {
             animated: animated,
             completion: completion
         )
+        ensureViewStackConsistency()
     }
 }
 
-extension FlowPresentationRoutine where Self: ViewableFlowRouting {
+extension FlowPresentationRoutine where Self: Routing {
     var viewableSubflowChildren: [ViewableSubflowRouting] {
         children.compactMap({ $0 as? ViewableSubflowRouting })
     }
@@ -173,7 +179,9 @@ extension FlowPresentationRoutine where Self: ViewableFlowRouting {
     var viewableChildren: [ViewableRouting] {
         children.compactMap({ $0 as? ViewableRouting })
     }
+}
 
+extension FlowPresentationRoutine where Self: Routing & NavigationContainable {
     var childViewableRoutersInFlow: [ViewableRouting] {
         viewableChildren.filter {
             navigationViewControllable.uiViewController.children.contains($0.viewControllable.uiViewController)

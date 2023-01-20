@@ -111,6 +111,10 @@ open class ViewableFlowRouter<FlowInteractorType, FlowViewControllerType>: Route
         )
     }
 
+    public func ensureViewStackConsistency() {
+        // No-op
+    }
+
     // MARK: - AdaptiveViewableRouting
 
     public func presentationControllerDidDismiss(_ presentationController: UIPresentationController) {
