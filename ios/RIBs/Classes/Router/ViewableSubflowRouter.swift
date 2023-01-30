@@ -17,16 +17,12 @@
 import UIKit
 
 /// The base protocol for all routers that own navigation controller.
-public protocol ViewableSubflowRouting: Routing {
+public protocol ViewableSubflowRouting: Routing, RouteIdentifiable {
     var parent: ViewableSubflowParentRouting? { get }
     var routeIdentifier: String { get }
 
     func ensureChildrenConsistency()
     func ensureViewStackConsistency()
-}
-
-public extension ViewableSubflowRouting {
-    var routeIdentifier: String { String(describing: Self.self) }
 }
 
 public typealias ViewableSubflowParentRouting = ViewableFlowRouting & FlowPresentationRoutine
@@ -71,7 +67,6 @@ open class ViewableSubflowRouter<InteractorType>: Router<InteractorType>,
 
     public func push(viewController: ViewControllable, transition: FlowTransition, completion: FlowPresentationRoutine.BaseCompletion?) {
         parent?.push(viewController: viewController, transition: transition, completion: completion)
-        ensureViewStackConsistency()
     }
 
     public func pop(animated: Bool, completion: FlowPresentationRoutine.BaseCompletion?) {
@@ -79,7 +74,6 @@ open class ViewableSubflowRouter<InteractorType>: Router<InteractorType>,
             return assertionFailure("Attempt to pop view controller that current subflow doesn't own")
         }
         parent?.pop(animated: animated, completion: completion)
-        ensureViewStackConsistency()
     }
 
     // MARK: - ViewableSubflowRouting

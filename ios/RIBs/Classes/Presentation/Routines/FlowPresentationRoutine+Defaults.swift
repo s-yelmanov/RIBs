@@ -36,17 +36,12 @@ public extension FlowPresentationRoutine where Self: Routing & NavigationContain
         guard !childViewableRouters.isEmpty else { return }
         let root = childViewableRouters.remove(at: 0)
 
-        for child in childViewableRouters.reversed() {
-            detachChild(child)
-        }
-
         flowTransition = transition
         navigationViewControllable.uiViewController.popToViewController(
             root.viewControllable.uiViewController,
             animated: animated,
             completion: completion
         )
-        ensureViewStackConsistency()
     }
 
     /// Pops all children this subflow owns after the one with specified identifier
@@ -56,20 +51,21 @@ public extension FlowPresentationRoutine where Self: Routing & NavigationContain
         transition: FlowTransition = .default,
         completion: BaseCompletion? = nil
     ) {
-        var childViewableRouters = childViewableRoutersInFlow
-        guard !childViewableRouters.isEmpty else {
+        var childrenAfterIdentifier = children.drop(while: { ($0 as? RouteIdentifiable)?.routeIdentifier != identifier })
+
+        guard !childrenAfterIdentifier.isEmpty else {
             return assertionFailure("Attempt to pop non-existent child with identifier: \(identifier)")
         }
-
-        var childrenAfterIdentifier = childViewableRouters.drop(while: { $0.routeIdentifier != identifier })
-        guard !childrenAfterIdentifier.isEmpty else { return }
         _ = childrenAfterIdentifier.removeFirst()
 
-        for child in childrenAfterIdentifier.reversed() {
-            detachChild(child)
+        let remainingViewControllers = childrenAfterIdentifier.reduce(.init()) { result, next -> [UIViewController] in
+            if let subflow = next as? ViewableSubflowRouting {
+                return result + subflow.allChildViewControllers
+            } else if let viewableChild = next as? ViewableRouting {
+                return result + [viewableChild.viewControllable.uiViewController]
+            }
+            return result
         }
-
-        let remainingViewControllers = childrenAfterIdentifier.map(\.viewControllable.uiViewController)
 
         flowTransition = transition
         navigationViewControllable.uiViewController.replaceViewControllers(
@@ -77,7 +73,6 @@ public extension FlowPresentationRoutine where Self: Routing & NavigationContain
             animated: animated,
             completion: completion
         )
-        ensureViewStackConsistency()
     }
 
     /// Pops the subflow with the specified `identifier` from children
@@ -87,16 +82,15 @@ public extension FlowPresentationRoutine where Self: Routing & NavigationContain
         transition: FlowTransition = .default,
         completion: BaseCompletion? = nil
     ) {
-        guard let subflow = viewableSubflowChildren.first(where: { $0.routeIdentifier == identifier }) else { return }
+        let subflow = viewableSubflowChildren.first(where: { $0.routeIdentifier == identifier })
+        guard let allChildViewControllers = subflow?.allChildViewControllers else { return }
 
         flowTransition = transition
         navigationViewControllable.uiViewController.replaceViewControllers(
-            with: parentViewControllersStack.filter { subflow.allChildViewControllers.contains($0) == false },
+            with: parentViewControllersStack.filter { allChildViewControllers.contains($0) == false },
             animated: animated,
             completion: completion
         )
-        detachChild(subflow)
-        ensureViewStackConsistency()
     }
 
     /// Pops child with the specified `identifier` from children
@@ -114,8 +108,6 @@ public extension FlowPresentationRoutine where Self: Routing & NavigationContain
             animated: animated,
             completion: completion
         )
-        detachChild(module)
-        ensureViewStackConsistency()
     }
 
     /// Replaces the last child in navigation stack with the specified `ViewableRouting`
@@ -142,7 +134,6 @@ public extension FlowPresentationRoutine where Self: Routing & NavigationContain
             animated: true,
             completion: completion
         )
-        ensureViewStackConsistency()
     }
 
     /// Replaces the child with specified `identifier` in navigation stack with the specified `ViewableRouting`
@@ -167,7 +158,6 @@ public extension FlowPresentationRoutine where Self: Routing & NavigationContain
             animated: animated,
             completion: completion
         )
-        ensureViewStackConsistency()
     }
 }
 

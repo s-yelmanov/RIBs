@@ -30,6 +30,4 @@ public protocol FlowPresentationRoutine: BasePresentationRoutine, NavigationCont
 
     func pushAttached(router: ViewableRouting, transition: FlowTransition, completion: BaseCompletion?)
     func popDetached(animated: Bool, completion: BaseCompletion?)
-
-    func ensureViewStackConsistency()
 }
