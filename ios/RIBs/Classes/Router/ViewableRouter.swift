@@ -27,7 +27,6 @@ public protocol ViewableRouting: Routing, RouteIdentifiable {
 
     /// The base view controllable associated with this `Router`.
     var viewControllable: ViewControllable { get }
-    var routeIdentifier: String { get }
 }
 
 /// The base class of all routers that owns view controllers, representing application states.
