@@ -18,7 +18,7 @@ import UIKit
 import Combine
 
 /// The base protocol for all routers that own their own view controllers.
-public protocol ViewableRouting: Routing, RouteIdentifiable {
+public protocol ViewableRouting: Routing {
 
     // The following methods must be declared in the base protocol, since `Router` internally invokes these methods.
     // In order to unit test router with a mock child router, the mocked child router first needs to conform to the

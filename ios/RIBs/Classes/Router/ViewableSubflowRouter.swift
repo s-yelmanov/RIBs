@@ -17,9 +17,8 @@
 import UIKit
 
 /// The base protocol for all routers that own navigation controller.
-public protocol ViewableSubflowRouting: Routing, RouteIdentifiable {
+public protocol ViewableSubflowRouting: Routing {
     var parent: ViewableSubflowParentRouting? { get }
-    var routeIdentifier: String { get }
 
     func ensureChildrenConsistency()
     func ensureViewStackConsistency()

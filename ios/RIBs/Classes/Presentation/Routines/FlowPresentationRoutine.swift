@@ -28,6 +28,6 @@ public protocol FlowPresentationRoutine: BasePresentationRoutine, NavigationCont
     func push(viewController: ViewControllable, transition: FlowTransition, completion: BaseCompletion?)
     func pop(animated: Bool, completion: BaseCompletion?)
 
-    func pushAttached(router: ViewableRouting, transition: FlowTransition, completion: BaseCompletion?)
+    func pushAttached(router: ViewableRouting, transition: FlowTransition, completion: BaseCompletion?, unique: Bool)
     func popDetached(animated: Bool, completion: BaseCompletion?)
 }

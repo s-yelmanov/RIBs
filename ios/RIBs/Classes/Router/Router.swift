@@ -33,7 +33,7 @@ public protocol RouterScope: AnyObject {
 }
 
 /// The base protocol for all routers.
-public protocol Routing: RouterScope {
+public protocol Routing: RouterScope, RouteIdentifiable {
 
     // The following methods must be declared in the base protocol, since `Router` internally  invokes these methods.
     // In order to unit test router with a mock child router, the mocked child router first needs to conform to the
@@ -60,6 +60,11 @@ public protocol Routing: RouterScope {
     /// - parameter child: The child router to attach.
     func attachChild(_ child: Routing, at index: Int?)
 
+    /// Attaches the given router as a child if there are no children with such routeIdentifier.
+    ///
+    /// - parameter child: The child router to attach.
+    func attachUnique(child: Routing, at index: Int?)
+
     /// Detaches the given router from the tree.
     ///
     /// - parameter child: The child router to detach.
@@ -73,6 +78,10 @@ public protocol Routing: RouterScope {
 public extension Routing {
     func attachChild(_ child: Routing) {
         attachChild(child, at: nil)
+    }
+
+    func attachUnique(child: Routing) {
+        attachUnique(child: child, at: nil)
     }
 }
 
@@ -154,6 +163,14 @@ open class Router<InteractorType>: NSObject, Routing {
         // We need to make sure the RIB is activated before letting it attach immutable children.
         child.interactable.activate()
         child.load()
+    }
+
+    /// Attaches the given router as a child if there are no children with such routeIdentifier.
+    ///
+    /// - parameter child: The child router to attach.
+    public func attachUnique(child: Routing, at index: Int? = nil) {
+        guard children.map(\.routeIdentifier).contains(child.routeIdentifier) == false else { return }
+        attachChild(child, at: index)
     }
 
     /// Detaches the given `Router` from the tree.

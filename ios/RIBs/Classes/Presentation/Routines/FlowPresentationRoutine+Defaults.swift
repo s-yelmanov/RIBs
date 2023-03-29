@@ -18,7 +18,14 @@ import UIKit
 import Foundation
 
 public extension FlowPresentationRoutine where Self: Routing {
-    func pushAttached(router: ViewableRouting, transition: FlowTransition = .default, completion: BaseCompletion? = nil) {
+    func pushAttached(
+        router: ViewableRouting,
+        transition: FlowTransition = .default,
+        completion: BaseCompletion? = nil,
+        unique: Bool = true
+    ) {
+        if unique, viewableChildren.map(\.routeIdentifier).contains(router.routeIdentifier) { return }
+
         attachChild(router)
         push(viewController: router.viewControllable, transition: transition, completion: completion)
     }
@@ -51,7 +58,7 @@ public extension FlowPresentationRoutine where Self: Routing & NavigationContain
         transition: FlowTransition = .default,
         completion: BaseCompletion? = nil
     ) {
-        var childrenAfterIdentifier = children.drop(while: { ($0 as? RouteIdentifiable)?.routeIdentifier != identifier })
+        var childrenAfterIdentifier = children.drop(while: { $0.routeIdentifier != identifier })
 
         guard !childrenAfterIdentifier.isEmpty else {
             return assertionFailure("Attempt to pop non-existent child with identifier: \(identifier)")
